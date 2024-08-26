@@ -1,11 +1,9 @@
-from flask import Blueprint
-
 import os
 import sys
 import json
 import importlib
 import contextlib
-from flask import Blueprint, render_template, redirect, url_for, current_app, g, request, jsonify
+from flask import Blueprint, render_template, redirect, url_for, current_app, request, jsonify
 import sqlite3
 
 from typing import List, Dict, Any, Optional
@@ -13,6 +11,9 @@ from datetime import datetime
 
 project_dir = os.path.dirname(__file__)
 project_name = os.path.basename(project_dir)
+
+project_name = current_app.config.get('project_name', 'Open Art Web Viewer')
+display_name = current_app.config.get('display_name', project_name)
 
 bp = Blueprint(project_name, __name__, template_folder=os.path.join(project_dir, 'templates'))
 
@@ -25,7 +26,8 @@ VALID_ART_TYPES = {'all', 'Print', 'Index of American Design', 'Drawing',
 
 @bp.route('/', methods=['GET', 'POST'])
 def index():
-        return render_template('search.html', project_name=g.project_name, display_name=g.display_name)
+    return render_template('search.html', project_name=project_name, display_name=display_name)
+    #return render_template('search.html', project_name=project_name, display_name=display_name)
 
 def generate_result_list(results: List[tuple]) -> List[Dict[str, Any]]:
     def check_undefined(s):
@@ -110,6 +112,7 @@ def generate_result_list_simple(results):
 
 @bp.route('/search', methods=['GET', 'POST'])
 def search():
+    
     search_type = request.form.get('search_type', 'title') if request.method == 'POST' else request.args.get('search_type', 'title')
     art_type = request.form.get('art_type', 'all') if request.method == 'POST' else request.args.get('art_type', 'all')
     query = request.form.get('query', '') if request.method == 'POST' else request.args.get('query', '')
@@ -148,10 +151,10 @@ def search():
         # Validate search_type and art_type
         if search_type not in VALID_SEARCH_TYPES:
             return render_template('search.html', error="Invalid search type", query=query,
-                                project_name=g.project_name, display_name=g.display_name)
+                                project_name=project_name, display_name=display_name)
         if art_type not in VALID_ART_TYPES:
             return render_template('search.html', error="Invalid art type", query=query,
-                                project_name=g.project_name, display_name=g.display_name)
+                                project_name=project_name, display_name=display_name)
 
         # Get total count
         count_query = f"SELECT COUNT(*) FROM objects WHERE {where_clause}"
@@ -200,8 +203,8 @@ def search():
                            page=page, 
                            per_page=per_page, 
                            total=total,
-                           project_name=g.project_name, 
-                           display_name=g.display_name)
+                           project_name=project_name, 
+                           display_name=display_name)
         
     except json.JSONDecodeError as e:
         print(f"JSON encoding error: {e}")
@@ -267,11 +270,9 @@ def api_search():
             'total': total
         })
         
-        
-        
     except sqlite3.Error as e:
         print(f"Database error: {e}")
-        return render_template('search.html', error="Database error occurred", project_name=g.project_name, display_name=g.display_name)
+        return render_template('search.html', error="Database error occurred", project_name=project_name, display_name=display_name)
     finally:
         if conn:
             conn.close()
