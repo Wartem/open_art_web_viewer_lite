@@ -43,7 +43,7 @@ def generate_result_list(results: List[tuple]) -> List[Dict[str, Any]]:
         except (ValueError, TypeError):
             return 0
 
-    def _clean_url(url: Optional[str]) -> str:
+    def _clean_url(url) -> str:
         if not isinstance(url, str) or not url:
             return ""
         url = url.strip().lower()
@@ -68,7 +68,7 @@ def generate_result_list(results: List[tuple]) -> List[Dict[str, Any]]:
             continue
 
         cleaned_result = {
-            'source': clean_string(source_trans.get(r[0]), r[0]),  
+            'source': clean_string(source_trans.get(r[0], r[0])),  
             'objectid': clean_string(r[1]),
             'title': clean_string(r[2]),
             'attribution': clean_string(r[3]),
