@@ -1,1 +1,1 @@
-web: python open_art_web_viewer_lite/app.py
+web: python app.py
