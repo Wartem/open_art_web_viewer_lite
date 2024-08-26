@@ -12,9 +12,6 @@ from datetime import datetime
 project_dir = os.path.dirname(__file__)
 project_name = os.path.basename(project_dir)
 
-project_name = current_app.config.get('project_name', 'Open Art Web Viewer')
-display_name = current_app.config.get('display_name', project_name)
-
 bp = Blueprint(project_name, __name__, template_folder=os.path.join(project_dir, 'templates'))
 
 source_trans = {'NGA': 'National Gallery of Art', 'MM': 'The Metropolitan Museum of Art'}
@@ -26,6 +23,9 @@ VALID_ART_TYPES = {'all', 'Print', 'Index of American Design', 'Drawing',
 
 @bp.route('/', methods=['GET', 'POST'])
 def index():
+    project_name = current_app.config.get('project_name', 'Open Art Web Viewer')
+    display_name = current_app.config.get('display_name', project_name)
+    
     return render_template('search.html', project_name=project_name, display_name=display_name)
     #return render_template('search.html', project_name=project_name, display_name=display_name)
 
@@ -112,6 +112,8 @@ def generate_result_list_simple(results):
 
 @bp.route('/search', methods=['GET', 'POST'])
 def search():
+    project_name = current_app.config.get('project_name', 'Open Art Web Viewer')
+    display_name = current_app.config.get('display_name', project_name)
     
     search_type = request.form.get('search_type', 'title') if request.method == 'POST' else request.args.get('search_type', 'title')
     art_type = request.form.get('art_type', 'all') if request.method == 'POST' else request.args.get('art_type', 'all')
@@ -212,6 +214,9 @@ def search():
 
 @bp.route('/api/search', methods=['GET'])
 def api_search():
+    project_name = current_app.config.get('project_name', 'Open Art Web Viewer')
+    display_name = current_app.config.get('display_name', project_name)
+    
     query = request.args.get('query', '')
     search_type = request.args.get('search_type', 'title')
     art_type = request.args.get('art_type', 'all')

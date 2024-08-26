@@ -2,6 +2,7 @@
 from flask import Flask
 import os
 import json
+import routes
 
 def create_app():
     app = Flask(__name__)
@@ -21,9 +22,10 @@ def create_app():
 
     # ... other configurations ...
 
-    from . import routes
     bp = routes.bp
     bp.name = app.config['project_name']  # Dynamically set the blueprint name
     app.register_blueprint(bp)
 
     return app
+
+__all__ = ['create_app']
