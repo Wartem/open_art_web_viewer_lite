@@ -1,4 +1,4 @@
-# open_art_web_viewer initialization
+# open_art_web_viewer lite initialization
 from flask import Flask
 import os
 import json
