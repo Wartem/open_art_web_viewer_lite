@@ -3,15 +3,24 @@ import os
 import importlib
 import sys
 
-# Read the project name from the config file
-config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+print("Current working directory:", os.getcwd())
+print("sys.path:", sys.path)
 
-# Add the parent directory to sys.path
+
 current_dir = os.path.dirname(os.path.abspath(__file__))
 parent_dir = os.path.dirname(current_dir)
 
 if parent_dir not in sys.path:
     sys.path.insert(0, parent_dir)
+    
+print("Current working directory:", os.getcwd())
+print("sys.path:", sys.path)
+
+# Read the project name from the config file
+config_path = os.path.join(parent_dir, 'config.json')
+
+#if parent_dir not in sys.path:
+    #sys.path.insert(0, parent_dir)
 
 try:
     with open(config_path, 'r') as config_file:
@@ -22,8 +31,12 @@ try:
         raise ValueError("Project name not found in config file")
     
     # Dynamic import using importlib
-    module = importlib.import_module(project_name)
-    create_app = getattr(module, 'create_app')
+    #module = importlib.import_module(project_name)
+    
+    #module = importlib.import_module('.' + project_name, package=__package__)
+    #create_app = getattr(module, 'create_app')
+    
+    from open_art_web_viewer_lite import create_app
 
     app = create_app()
 
