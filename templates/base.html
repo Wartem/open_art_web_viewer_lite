@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Wartem's Open Art Viewer{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+    {% block extra_head %}{% endblock %}
+    
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/base.css') }}">
+    
+    {% block extra_css %}{% endblock %} 
+</head>
+<body>
+    <header>
+        <div class="container" id="head-text">
+            <div id="branding">
+                <h1>Wartem's <span class="highlight">Open Art Viewer</span></h1>
+            </div>
+
+            <nav>
+                <ul>
+                    <li class="current"><a href="{{ url_for(project_name + '.index') }}">Home</a></li>
+                    <li class="current"><a href="{{ url_for(project_name + '.search') }}">Search</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <section id="main">
+        <div class="container content-wrapper">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </section>
+
+    <!-- 
+    <footer>
+        <p>&copy; <span id="currentYear"></span> Wartem. All rights reserved.</p>
+    </footer> 
+    
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script> -->
+    
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

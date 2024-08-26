@@ -1,0 +1,612 @@
+{% extends 'base.html' %} {% block content %}
+
+<style>
+  .artwork-card {
+    margin-bottom: 2rem;
+    position: relative;
+  }
+</style>
+
+<style>
+    .search-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 90%;
+      margin: 0 auto;
+    }
+  
+    .search-row {
+      display: flex;
+      width: 80%;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+  
+    .search-input {
+      flex-grow: 1;
+      padding: 5px;
+      margin-right: 10px;
+    }
+  
+    .search-button {
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #42d461;
+    }
+  
+    .search-button:hover {
+      background-color: #11832a;
+      color: white;
+    }
+  
+    .select-row {
+      display: flex;
+      width: 60%;
+      margin-bottom: 1rem;
+    }
+  
+    .form-select {
+      flex: 1;
+      padding: 5px;
+    }
+  
+    .form-select:first-child {
+      margin-right: 10px;
+    }
+  
+    @media (max-width: 768px) {
+      .search-row {
+        width: 100%;
+      }
+  
+      .select-row {
+        width: 100%;
+        flex-direction: column;
+      }
+  
+      .form-select {
+        margin-bottom: 10px;
+      }
+  
+      .form-select:first-child {
+        margin-right: 0;
+      }
+    }
+  
+    @media (max-width: 480px) {
+      .search-row {
+        flex-direction: column;
+      }
+  
+      .search-input {
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+  
+      .search-button {
+        width: 100%;
+      }
+    }
+  </style>
+
+<div>
+      
+      <form action="{{ url_for('open_art_web_viewer.search') }}" method="get">
+        <div class="search-container">
+            <div class="search-row">
+                <input type="text" class="search-input" name="query" value="{{ query }}" placeholder="Enter search term">
+                <button type="submit" class="search-button">Search</button>
+              </div>
+          <div class="select-row">
+            <select class="form-select" name="art_type" id="art_type">
+              <option value="all" {% if art_type == 'all' %}selected{% endif %}>Any Art</option>
+              <option value="Print" {% if art_type == 'Print' %}selected{% endif %}>Print (46104)</option>
+              <option value="Index of American Design" {% if art_type == 'Index of American Design' %}selected{% endif %}>Index of American Design (18245)</option>
+              <option value="Drawing" {% if art_type == 'Drawing' %}selected{% endif %}>Drawing (13920)</option>
+              <option value="Photograph" {% if art_type == 'Photograph' %}selected{% endif %}>Photograph (13467)</option>
+              <option value="Painting" {% if art_type == 'Painting' %}selected{% endif %}>Painting (8878)</option>
+              <option value="Sculpture" {% if art_type == 'Sculpture' %}selected{% endif %}>Sculpture (6569)</option>
+              <option value="Volume" {% if art_type == 'Volume' %}selected{% endif %}>Volume (869)</option>
+              <option value="Decorative Art" {% if art_type == 'Decorative Art' %}selected{% endif %}>Decorative Art (751)</option>
+              <option value="Portfolio" {% if art_type == 'Portfolio' %}selected{% endif %}>Portfolio (247)</option>
+              <option value="Technical Material" {% if art_type == 'Technical Material' %}selected{% endif %}>Technical Material (57)</option>
+              <option value="Time Based Media Art" {% if art_type == 'Time Based Media Art' %}selected{% endif %}>Time-Based Media Art (5)</option>
+            </select>
+            <select class="form-select" name="search_type" id="search_type">
+              <option value="title" {% if search_type == 'title' %}selected{% endif %}>Title</option>
+              <option value="attribution" {% if search_type == 'attribution' %}selected{% endif %}>Attribution</option>
+              <option value="displaydate" {% if search_type == 'displaydate' %}selected{% endif %}>Display Date</option>
+            </select>
+          </div>
+        </div>
+      </form>
+
+  {% if query %}
+
+  <div class="search-results-container">
+    <h4 class="search-results-header">
+      <span class="search-query">Search Results for <b>"{{ query }}"</b></span>
+      <span class="search-stats">
+        <span class="total-results"
+          >Total Results: <b>{{ total }}</b> results</span
+        >
+        <span class="search-type">Search Type: <b>{{ search_type }}</b></span>
+        <span class="art-type">Art Type: <b>{{ art_type }}</b></span>
+      </span>
+    </h4>
+  </div>
+
+  <style>
+    .search-results-container {
+      margin: 0px;
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+      padding: 0.5rem;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-results-header {
+      font-size: 1.2rem;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .search-query {
+      font-weight: 600;
+      color: #1a73e8;
+    }
+
+    .search-stats {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .total-results {
+      font-weight: 500;
+    }
+
+    .search-type,
+    .art-type {
+      background-color: #e7f0fe;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .card {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+
+  <div
+    id="results-container"
+    class="row g-4"
+    data-total="{{ total }}"
+    data-per-page="{{ per_page }}"
+    data-current-page="{{ page }}"
+    data-query="{{ query }}"
+    data-search-type="{{ search_type }}"
+    data-art-type="{{ art_type }}"
+    data-project-name="{{ project_name }}"
+  >
+    <!-- Results will be loaded here -->
+  </div>
+  <div id="loading" class="text-center mt-3" style="display: none">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  <div class="text-center mt-3">
+    <button id="load-more" class="btn btn-secondary" style="display: none">
+      Load More
+    </button>
+  </div>
+
+  <style>
+    .modal-content {
+      background-color: #f8f9fa;
+      margin: 0 auto; /* Remove top margin */
+      padding: 20px 20px 40px; /* Increase bottom padding */
+      border: 1px solid #888;
+      width: 100%; /* Use full width */
+      max-width: none; /* Remove max-width constraint */
+      box-sizing: border-box;
+      height: 100vh; /* Use full viewport height */
+      display: flex;
+      flex-direction: column;
+    }
+
+    #modal-image {
+      width: 100%;
+      max-height: calc(
+        100vh - 150px
+      ); /* Adjust based on title and button height */
+      object-fit: contain;
+      flex-grow: 1; /* Allow image to take up remaining space */
+    }
+
+    #modal-title {
+      margin-top: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .download-button {
+      display: block;
+      width: 150px;
+      margin: 10px auto 0;
+      padding: 5px;
+      font-size: 0.8rem;
+      background-color: #4081d6;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    .download-button:hover {
+      background-color: #1b5aad;
+      color: white;
+    }
+
+    /* Adjust the modal to take full screen */
+    .modal {
+      padding: 0;
+    }
+
+    .modal .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #aaa;
+      cursor: pointer;
+      z-index: 1001;
+    }
+
+    .modal .close:hover,
+    .modal .close:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .artwork-card .card-img-top:not([src$="image_not_found.jpg"]) {
+      cursor: pointer;
+    }
+
+    .artwork-card .card-img-top[src$="image_not_found.jpg"] {
+      cursor: not-allowed;
+      opacity: 0.9; /* Optional: makes the image appear faded */
+    }
+
+    .card-title {
+      font-weight: 500;
+    }
+
+    .zoom-container {
+      position: relative;
+      overflow: visible;
+      /* z-index: 1; */
+    }
+
+    .zoom-image {
+      position: relative;
+      transition: transform 2s ease, z-index 0.3s ease;
+      object-fit: contain;
+    }
+
+    .zoom-image:hover {
+      transform: scale(2);
+      z-index: 2000;
+      position: absolute;
+    }
+
+    .card-img-top{
+        padding-top: 1rem;
+    }
+  </style>
+  <div id="artwork-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <img id="modal-image" src="" alt="Artwork" />
+      <div id="modal-title"></div>
+      <a id="download-link" href="" download class="download-button"
+        >Download Full Image</a
+      >
+    </div>
+  </div>
+
+  <script>
+    const resultsContainer = document.getElementById("results-container");
+    const total = parseInt(resultsContainer.dataset.total);
+    const perPage = parseInt(resultsContainer.dataset.perPage);
+    let currentPage = parseInt(resultsContainer.dataset.currentPage);
+    const query = resultsContainer.dataset.query;
+    const searchType = resultsContainer.dataset.searchType;
+    const artType = resultsContainer.dataset.artType;
+    const projectName = resultsContainer.dataset.projectName;
+
+    let currentHoveredImage = null;
+
+    const fallbackImageUrl =
+      "{{ url_for('static', filename='images/image_not_found.jpg') }}";
+
+    let loading = false;
+    let hasMore = total > currentPage * perPage;
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    function handleMouseOver(event) {
+      const targetElement = event.target;
+      if (
+        targetElement.classList.contains("card-img-top") &&
+        targetElement.src !== fallbackImageUrl
+      ) {
+        if (currentHoveredImage === targetElement) return; // Don't trigger hover effect again
+        currentHoveredImage = targetElement;
+        // Trigger hover effect here...
+      }
+    }
+
+    document.addEventListener('mouseover', handleMouseOver);
+
+    function loadMoreResults() {
+      if (loading || !hasMore) return;
+      loading = true;
+      document.getElementById("loading").style.display = "block";
+
+      //fetch(`/api/search?query=${encodeURIComponent(query)}&page=${currentPage + 1}&search_type=${searchType}&art_type=${artType}`)
+      fetch(
+        `/api/search?query=${query}&page=${
+          currentPage + 1
+        }&search_type=${searchType}&art_type=${artType}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          appendResults(data.results);
+          currentPage++;
+          hasMore = data.has_more;
+          loading = false;
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("load-more").style.display = hasMore
+            ? "block"
+            : "none";
+        })
+        .catch((error) => {
+          console.error("Error fetching more results:", error);
+          loading = false;
+          document.getElementById("loading").style.display = "none";
+
+          alert(
+            "An error occurred while loading more results. Please try again."
+          );
+        });
+    }
+
+    function appendResults(results) {
+      results.forEach((artwork, index) => {
+        setTimeout(() => {
+          const div = document.createElement("div");
+          div.className = "col-sm-6 col-md-4 col-lg-3 artwork-card";
+          div.innerHTML = `
+        <div class="card h-100">
+            <div class="zoom-container" style="height: 200px;">
+            <img class="card-img-top zoom-image" src="${artwork.imgurl_thumb}" alt="${artwork.title}" 
+            class="card-img-top zoom-image" style="height: 100%; width: 100%;"
+                loading="lazy" 
+                onerror="this.onerror=null; this.src='${fallbackImageUrl}';">
+                 </div>
+            <div class="card-body">
+                <h5 class="card-title">${artwork.title}</h5>
+                <br>
+                <p class="card-text artwork-info"><b>Source:</b> ${artwork.source}</p>
+                <p class="card-text artwork-info"><b>Attribution:</b> ${artwork.attribution}</p>
+                <p class="card-text artwork-info"><b>Created:</b> ${artwork.displaydate}</p>
+                <p class="card-text artwork-info"><b>Display date:</b> ${artwork.displaydate} (${artwork.beginyear} - ${artwork.endyear})</p>
+                <p class="card-text artwork-info"><b>Classification:</b> ${artwork.classification}</p>
+                <p class="card-text artwork-info"><b>Medium:</b> ${artwork.medium}</p>
+                <p class="card-text artwork-info"><b>Dimensions:</b> ${artwork.width} x ${artwork.height}</p>
+            </div>
+        </div>
+    `;
+          // Add click event to open modal
+          /*
+            div.querySelector('.card').addEventListener('click', () => openModal(artwork));
+            
+            const img = div.querySelector('.card-img-top');
+            
+            if (img.src !== fallbackImageUrl) {
+                div.querySelector('.card').addEventListener('click', () => openModal(artwork));
+            } else {
+                img.title = "Image not available";
+            }*/
+
+          const img = div.querySelector(".card-img-top");
+
+          // Add click event only to the image
+          if (img.src !== fallbackImageUrl) {
+            img.addEventListener("click", () => openModal(artwork));
+            img.style.cursor = "pointer"; // Optional: change cursor to indicate clickable
+          }
+
+          resultsContainer.appendChild(div);
+        }, index * 50);
+      });
+    }
+
+    function openModal(artwork) {
+      const modal = document.getElementById("artwork-modal");
+      const modalImg = document.getElementById("modal-image");
+      const modalTitle = document.getElementById("modal-title");
+      const downloadLink = document.getElementById("download-link");
+      const closeButton = modal.querySelector(".close"); // Add this line
+
+      modalImg.src = artwork.imgurl_downsized;
+      modalImg.alt = artwork.title;
+
+      modalTitle.textContent = `${artwork.title} by ${artwork.attribution}`;
+
+      // Remove the target attribute
+      downloadLink.removeAttribute("target");
+
+      // Set up the download link
+      downloadLink.href = artwork.imgurl_full;
+      downloadLink.download = `${artwork.title.replace(
+        /[^a-z0-9]/gi,
+        "_"
+      )}_full.jpg`;
+
+      const safeAttribution = artwork.attribution.replace(/[^a-z0-9]/gi, "_");
+      const safeTitle = artwork.title.replace(/[^a-z0-9]/gi, "_");
+      const fileName = `${safeAttribution} - ${safeTitle}_full.jpg`;
+
+      // Add click event listener to handle download
+      downloadLink.onclick = function (e) {
+        e.preventDefault();
+        fetch(artwork.imgurl_full)
+          .then((response) => response.blob())
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          })
+          .catch((error) => console.error("Download failed:", error));
+      };
+
+      // Close modal when clicking on <span> (x)
+      document.querySelector(".close").onclick = function () {
+        document.getElementById("artwork-modal").style.display = "none";
+      };
+
+      // Close modal when clicking outside of it
+      window.onclick = function (event) {
+        const modal = document.getElementById("artwork-modal");
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      };
+
+      modal.style.display = "block";
+    }
+
+    function parseAndFixJson(jsonString) {
+      // Step 1: Try parsing the original string without cleaning
+      try {
+        return JSON.parse(jsonString);
+      } catch (error) {
+        console.log(
+          "Failed to parse original string. Attempting to fix and clean..."
+        );
+        return [];
+      }
+
+      // Step 2: If parsing fails, use an advanced fix method
+      function advancedFixJsonString(str) {
+        // Remove any leading/trailing whitespace
+        str = str.trim();
+
+        // Replace single quotes with double quotes if any
+        str = str.replace(/'/g, '"');
+
+        // Ensure the string starts and ends with appropriate brackets
+        if (!str.startsWith("[") && !str.startsWith("{")) str = "[" + str;
+        if (!str.endsWith("]") && !str.endsWith("}")) str = str + "]";
+
+        // Replace any unescaped newlines, tabs, and carriage returns
+        str = str
+          .replace(/(?<!\\)\n/g, "\\n")
+          .replace(/(?<!\\)\r/g, "\\r")
+          .replace(/(?<!\\)\t/g, "\\t");
+
+        // Fix common JSON syntax errors
+        str = str.replace(/,\s*]/g, "]"); // Remove trailing commas in arrays
+        str = str.replace(/,\s*}/g, "}"); // Remove trailing commas in objects
+
+        // Debugging: Log the fixed string
+        console.log("Fixed JSON String:", str);
+
+        return str;
+      }
+
+      // Step 3: Try parsing the fixed and cleaned string
+      try {
+        let fixedString = advancedFixJsonString(jsonString);
+        return JSON.parse(fixedString);
+      } catch (error) {
+        console.log(
+          "Failed to parse fixed string. Replacing with error text..."
+        );
+      }
+
+      // Step 4: If all else fails, return a JSON object with error information
+      return {
+        error: true,
+        message: "Failed to parse JSON",
+        originalString: jsonString.substring(0, 500) + "...", // Increase to first 500 characters for better context
+      };
+    }
+
+    // Main execution
+    var initialResultsString = '{{ results|tojson|safe }}';
+    // console.log("Initial results string:", initialResultsString);
+
+    let parsedJson = parseAndFixJson(initialResultsString);
+
+    // Initial load
+    if (parsedJson && parsedJson.length > 0) {
+      appendResults(parsedJson);
+      document.getElementById("load-more").style.display =
+        total > parsedJson.length ? "block" : "none";
+    } else if (total > 0) {
+      loadMoreResults();
+    } else {
+      resultsContainer.innerHTML =
+        "<p class='text-center'>No results found.</p>";
+    }
+
+    // Infinite scroll with debounce
+    window.addEventListener(
+      "scroll",
+      debounce(() => {
+        if (
+          window.innerHeight + window.scrollY >=
+          document.body.offsetHeight - 500
+        ) {
+          loadMoreResults();
+        }
+      }, 250)
+    );
+
+    // Load More button
+    document
+      .getElementById("load-more")
+      .addEventListener("click", loadMoreResults);
+  </script>
+  {% endif %}
+</div>
+{% endblock %}

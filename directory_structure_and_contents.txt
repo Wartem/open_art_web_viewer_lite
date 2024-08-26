@@ -1,0 +1,1149 @@
+
+Directory: M:\Dev\Python\2024\open_art_web_viewer_lite
+======================================================
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\app.py
+--------------------------------------------------------
+import json
+import os
+import importlib
+import sys
+
+# Read the project name from the config file
+config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+
+# Add the parent directory to sys.path
+current_dir = os.path.dirname(os.path.abspath(__file__))
+parent_dir = os.path.dirname(current_dir)
+if parent_dir not in sys.path:
+    sys.path.insert(0, parent_dir)
+
+try:
+    with open(config_path, 'r') as config_file:
+        config = json.load(config_file)
+        project_name = config.get('project_name')
+
+    if not project_name:
+        raise ValueError("Project name not found in config file")
+    
+    # Dynamic import using importlib
+    module = importlib.import_module(project_name)
+    create_app = getattr(module, 'create_app')
+
+    app = create_app()
+
+    if __name__ == '__main__':
+        port = int(os.environ.get('PORT', 5000))
+        app.run(host='0.0.0.0', port=port)
+
+except FileNotFoundError:
+    print(f"Error: Config file not found at {config_path}")
+except json.JSONDecodeError:
+    print(f"Error: Invalid JSON in config file at {config_path}")
+except ValueError as e:
+    print(f"Error: {str(e)}")
+except ImportError:
+    print(f"Error: Could not import module '{project_name}'. Make sure it exists and is in the correct location.")
+except AttributeError:
+    print(f"Error: Module '{project_name}' does not have a 'create_app' function.")
+except Exception as e:
+    print(f"An unexpected error occurred: {str(e)}")
+sys.exit(1)
+
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\config.json
+-------------------------------------------------------------
+{
+    "project_name": "open_art_web_viewer_lite",
+    "display_name": "Open Art Web Viewer Lite"
+}
+
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\directory_structure_and_contents.txt
+--------------------------------------------------------------------------------------
+
+
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\requirements.txt
+------------------------------------------------------------------
+blinker==1.8.2
+click==8.1.7
+colorama==0.4.6
+Flask==3.0.3
+itsdangerous==2.2.0
+Jinja2==3.1.4
+MarkupSafe==2.1.5
+Werkzeug==3.0.3
+
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\routes.py
+-----------------------------------------------------------
+from flask import Blueprint
+
+import os
+import sys
+import json
+import importlib
+import contextlib
+from flask import Blueprint, render_template, redirect, url_for, current_app, g, request, jsonify
+import sqlite3
+
+from typing import List, Dict, Any, Optional
+from datetime import datetime
+
+project_dir = os.path.dirname(__file__)
+project_name = os.path.basename(project_dir)
+
+bp = Blueprint(project_name, __name__, template_folder=os.path.join(project_dir, 'templates'))
+
+source_trans = {'NGA': 'National Gallery of Art', 'MM': 'The Metropolitan Museum of Art'}
+
+VALID_SEARCH_TYPES = {'title', 'attribution', 'displaydate'}
+VALID_ART_TYPES = {'all', 'Print', 'Index of American Design', 'Drawing', 
+                   'Photograph', 'Painting', 'Sculpture', 'Volume', 'Decorative Art', 
+                   'Portfolio', 'Technical Material', 'Time Based Media Art'}
+
+@bp.route('/', methods=['GET', 'POST'])
+def index():
+        return render_template('search.html', project_name=g.project_name, display_name=g.display_name)
+
+def generate_result_list(results: List[tuple]) -> List[Dict[str, Any]]:
+    def check_undefined(s):
+        return s.replace("undefined", "null").replace("\"", "") if isinstance(s, str) else s
+    
+    def clean_string(s: Optional[str]) -> str:
+        s = check_undefined(s)
+        return s.strip() if isinstance(s, str) else str(s).strip()
+
+    def _clean_int(i: Any) -> int:
+        try:
+            return int(float(i))
+        except (ValueError, TypeError):
+            return 0
+
+    def _clean_url(url: Optional[str]) -> str:
+        if not isinstance(url, str) or not url:
+            return ""
+        url = url.strip().lower()
+        if not url.startswith(('http://', 'https://')):
+            url = f"https://{url}"
+        return url
+
+    def _clean_year(year: Any) -> Optional[int]:
+        cleaned = _clean_int(year)
+        current_year = datetime.now().year
+        return cleaned if 0 <= cleaned <= current_year else None
+
+    def _clean_dimensions(dim: Any) -> Optional[float]:
+        try:
+            return round(float(dim), 2)
+        except (ValueError, TypeError):
+            return str(dim)
+
+    cleaned_results = []
+    for r in results:
+        if not r or len(r) < 14:
+            continue
+
+        cleaned_result = {
+            'source': clean_string(source_trans.get(r[0]), r[0]),  
+            'objectid': clean_string(r[1]),
+            'title': clean_string(r[2]),
+            'attribution': clean_string(r[3]),
+            'beginyear': clean_string(r[4]),
+            'endyear': clean_string(r[5]),
+            'displaydate': clean_string(r[6]),
+            'classification': clean_string(r[7]),
+            'medium': clean_string(r[8]),
+            'width': clean_string(r[9]),
+            'height': clean_string(r[10]),
+            'imgurl_thumb': clean_string(r[11]),
+            'imgurl_downsized': clean_string(r[12]),
+            'imgurl_full': clean_string(r[13])
+        }
+
+        cleaned_results.append(cleaned_result)
+
+    return cleaned_results
+
+
+def generate_result_list_simple(results):
+        # Convert results to a list of dictionaries
+    return [
+        {
+            'source': source_trans.get(r[0], r[0]),
+            'objectid': r[1],
+            'title': r[2],
+            'attribution': r[3],
+            'beginyear': r[4],
+            'endyear': r[5],
+            'displaydate': r[6],
+            'classification': r[7],
+            'medium': r[8],
+            'width': r[9],
+            'height': r[10],
+            'imgurl_thumb': r[11],
+            'imgurl_downsized': r[12],
+            'imgurl_full': r[13]
+        } for r in results
+    ]
+
+@bp.route('/search', methods=['GET', 'POST'])
+def search():
+    search_type = request.form.get('search_type', 'title') if request.method == 'POST' else request.args.get('search_type', 'title')
+    art_type = request.form.get('art_type', 'all') if request.method == 'POST' else request.args.get('art_type', 'all')
+    query = request.form.get('query', '') if request.method == 'POST' else request.args.get('query', '')
+    
+    page = request.args.get('page', 1, type=int)
+    per_page = 12  # Number of items per page
+    
+    '''
+    print(f"Debug - Request method: {request.method}")
+    print(f"Debug - search_type: {search_type}")
+    print(f"Debug - art_type: {art_type}")
+    print(f"Debug - query: {query}")
+    '''
+
+    if query:
+        conn = sqlite3.connect(current_app.config['SQLITE_DB_PATH'])
+        c = conn.cursor()
+        
+        # Adjust WHERE clause based on search_type
+        if search_type == 'title':
+            where_clause = "title LIKE ?"
+        elif search_type == 'attribution':
+            where_clause = "attribution LIKE ?"
+        elif search_type == 'displaydate':
+            # where_clause = "(beginyear <= ? AND endyear >= ?)"
+            where_clause = "displaydate LIKE ?"
+        else:
+            where_clause = "title LIKE ?"  # Default to title search if invalid search_type
+
+        search_param = query if isinstance(query, tuple) else (f'%{query}%',)
+
+        if art_type != 'all':
+            where_clause += " AND classification = ?"
+            search_param += (art_type,)
+            
+        # Validate search_type and art_type
+        if search_type not in VALID_SEARCH_TYPES:
+            return render_template('search.html', error="Invalid search type", query=query,
+                                project_name=g.project_name, display_name=g.display_name)
+        if art_type not in VALID_ART_TYPES:
+            return render_template('search.html', error="Invalid art type", query=query,
+                                project_name=g.project_name, display_name=g.display_name)
+
+        # Get total count
+        count_query = f"SELECT COUNT(*) FROM objects WHERE {where_clause}"
+        
+        c.execute(count_query, search_param)
+            
+        total = c.fetchone()[0]
+
+        # Get paginated results with all fields
+        offset = (page - 1) * per_page
+        
+        results_query = f"""
+            SELECT source, objectid, title, attribution, beginyear, endyear, displaydate, 
+                   classification, medium, width, height, imgurl_thumb, imgurl_downsized, imgurl_full
+            FROM objects 
+            WHERE {where_clause}
+            LIMIT ? OFFSET ?
+        """
+        # print(results_query)
+        
+        # print(search_param + (per_page, offset))
+        
+        c.execute(results_query, search_param + (per_page, offset))
+        results = c.fetchall()
+        conn.close()
+
+        # Convert results to a list of dictionaries
+        results_list = generate_result_list(results)
+        
+    else:
+        results_list = []
+        total = 0
+    
+    #print(f"Debug - Query: {query}, Search Type: {search_type}, Art Type: {art_type}")
+    #print(f"Debug - Total results: {total}")
+    #print(f"Debug - First few results: {results_list[:3]}")  # Print first 3 results
+
+
+    try:
+        return render_template('search.html', 
+                           #results=Markup(json.dumps(results_dict, 
+                           results=results_list,
+                           query=query if isinstance(query, str) else (query[0] if query else ''),
+                           search_type=search_type,
+                           art_type=art_type,
+                           page=page, 
+                           per_page=per_page, 
+                           total=total,
+                           project_name=g.project_name, 
+                           display_name=g.display_name)
+        
+    except json.JSONDecodeError as e:
+        print(f"JSON encoding error: {e}")
+
+
+@bp.route('/api/search', methods=['GET'])
+def api_search():
+    query = request.args.get('query', '')
+    search_type = request.args.get('search_type', 'title')
+    art_type = request.args.get('art_type', 'all')
+    page = request.args.get('page', 1, type=int)
+    per_page = 12  # Number of items per page
+    
+    conn = None
+    try: 
+        conn = sqlite3.connect(current_app.config['SQLITE_DB_PATH'])
+        c = conn.cursor()
+
+
+        # Base query
+        base_query = """
+            SELECT source, objectid, title, attribution, beginyear, endyear, displaydate,
+                classification, medium, width, height, imgurl_thumb, imgurl_downsized, imgurl_full
+            FROM objects 
+            WHERE """
+
+        # Adjust WHERE clause based on search_type
+        if search_type == 'title':
+            where_clause = "title LIKE ?"
+            search_param = (f'%{query}%',)
+        elif search_type == 'attribution':
+            where_clause = "attribution LIKE ?"
+            search_param = (f'%{query}%',)
+        elif search_type == 'displaydate':
+            where_clause = "displaydate LIKE ?"
+            search_param = (f'%{query}%',)
+        else:
+                where_clause = "title LIKE ?"
+                search_param = (f'%{query}%',) # (f'%{"Query Error"}%',)
+
+        # Add art_type filter if not 'all'
+        if art_type != 'all':
+            where_clause += " AND classification = ?"
+            search_param += (art_type,)
+
+        # Get total count
+        count_query = f"SELECT COUNT(*) FROM objects WHERE {where_clause}"
+        c.execute(count_query, search_param)
+        total = c.fetchone()[0]
+
+        # Get paginated results
+        offset = (page - 1) * per_page
+        full_query = base_query + where_clause + " LIMIT ? OFFSET ?"
+        c.execute(full_query, search_param + (per_page, offset))
+        results = c.fetchall()
+        
+        # Convert results to a list of dictionaries
+        results_list = generate_result_list(results)
+
+        return jsonify({
+            'results': results_list,
+            'has_more': total > (page * per_page),
+            'total': total
+        })
+        
+        
+        
+    except sqlite3.Error as e:
+        print(f"Database error: {e}")
+        return render_template('search.html', error="Database error occurred", project_name=g.project_name, display_name=g.display_name)
+    finally:
+        if conn:
+            conn.close()
+
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\structure_print.py
+--------------------------------------------------------------------
+import os
+
+# Define the directories to exclude and the file extensions to include
+excluded_dirs = {'.venv', 'old', 'structure_print', 'venv', '__pycache__', 'test_v2', 'test_v3',  'CO2EmissionForecasting', 'C02TransportCalculator', '.git', 'git'}
+included_extensions = {'.py', '.txt', '.html', '.js', '.json', '.yml', '.yaml'}
+
+# The name of the output file
+output_filename = 'directory_structure_and_contents.txt'
+
+# Set to track processed files
+processed_files = set()
+
+def is_included_file(file_name):
+    # Check if the file has one of the allowed extensions
+    return any(file_name.endswith(ext) for ext in included_extensions)
+
+def write_file_content(file_path, output_file):
+    # Write the name and content of the file to the output file
+    output_file.write(f"\nFile: {file_path}\n")
+    output_file.write(f"{'-'*len(f'File: {file_path}')}\n")
+    with open(file_path, 'r', encoding='utf-8') as f:
+        output_file.write(f.read() + '\n\n')
+
+def traverse_directory(directory, output_file):
+    # Traverse the directory structure
+    for root, dirs, files in os.walk(directory):
+        # Skip the excluded directories
+        dirs[:] = [d for d in dirs if d not in excluded_dirs]
+
+        # Write the directory path as a heading
+        output_file.write(f"\nDirectory: {root}\n")
+        output_file.write(f"{'='*len(f'Directory: {root}')}\n")
+        
+        for file in files:
+            if is_included_file(file):
+                file_path = os.path.join(root, file)
+                # Check if the file has already been processed
+                if file_path not in processed_files:
+                    write_file_content(file_path, output_file)
+                    # Mark the file as processed
+                    processed_files.add(file_path)
+
+# Get the current directory
+current_dir = os.getcwd()
+
+# Run the script
+with open(os.path.join(current_dir, output_filename), 'w', encoding='utf-8') as output_file:
+    traverse_directory(current_dir, output_file)
+
+print(f"Directory structure and contents have been saved to '{output_filename}' in the current folder.")
+
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\__init__.py
+-------------------------------------------------------------
+# open_art_web_viewer initialization
+from flask import Flask
+import os
+import json
+
+def create_app():
+    app = Flask(__name__)
+    app.secret_key = os.urandom(24)
+
+    # Load configuration from config.json
+    config_path = os.path.join(os.path.dirname(__file__), 'config.json')
+    if os.path.exists(config_path):
+        with open(config_path, 'r') as config_file:
+            config = json.load(config_file)
+            app.config.update(config)
+
+    # Set default values for project_name, display_name, and SQLITE_DB_PATH
+    app.config.setdefault('project_name', os.path.basename(os.path.dirname(__file__)))
+    app.config.setdefault('display_name', app.config['project_name'])
+    app.config.setdefault('SQLITE_DB_PATH', os.path.join(os.path.dirname(__file__), 'open_art.db'))
+
+    # ... other configurations ...
+
+    from . import routes
+    bp = routes.bp
+    bp.name = app.config['project_name']  # Dynamically set the blueprint name
+    app.register_blueprint(bp)
+
+    return app
+
+
+Directory: M:\Dev\Python\2024\open_art_web_viewer_lite\static
+=============================================================
+
+Directory: M:\Dev\Python\2024\open_art_web_viewer_lite\static\css
+=================================================================
+
+Directory: M:\Dev\Python\2024\open_art_web_viewer_lite\static\images
+====================================================================
+
+Directory: M:\Dev\Python\2024\open_art_web_viewer_lite\templates
+================================================================
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\templates\base.html
+---------------------------------------------------------------------
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Wartem's Open Art Viewer{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <!-- Font Awesome CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.1/css/all.min.css">
+
+    {% block extra_head %}{% endblock %}
+    
+    <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='css/base.css') }}">
+    
+    {% block extra_css %}{% endblock %} 
+</head>
+<body>
+    <header>
+        <div class="container" id="head-text">
+            <div id="branding">
+                <h1>Wartem's <span class="highlight">Open Art Viewer</span></h1>
+            </div>
+
+            <nav>
+                <ul>
+                    <li class="current"><a href="{{ url_for(project_name + '.index') }}">Home</a></li>
+                    <li class="current"><a href="{{ url_for(project_name + '.search') }}">Search</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+    <section id="main">
+        <div class="container content-wrapper">
+            {% block content %}
+            {% endblock %}
+        </div>
+    </section>
+
+    <!-- 
+    <footer>
+        <p>&copy; <span id="currentYear"></span> Wartem. All rights reserved.</p>
+    </footer> 
+    
+    <script>
+        document.getElementById('currentYear').textContent = new Date().getFullYear();
+    </script> -->
+    
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\templates\index.html
+----------------------------------------------------------------------
+{% extends 'base.html' %}
+
+{% block content %}
+<h1>{{ config['display_name'] }}</h1>
+<!-- index_open_art.html -->
+<head>
+    <meta http-equiv="refresh" content="0; url=/search.html">
+</head>
+{% endblock %}
+
+
+File: M:\Dev\Python\2024\open_art_web_viewer_lite\templates\search.html
+-----------------------------------------------------------------------
+{% extends 'base.html' %} {% block content %}
+
+<style>
+  .artwork-card {
+    margin-bottom: 2rem;
+    position: relative;
+  }
+</style>
+
+<style>
+    .search-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      width: 90%;
+      margin: 0 auto;
+    }
+  
+    .search-row {
+      display: flex;
+      width: 80%;
+      margin-top: 1rem;
+      margin-bottom: 0.5rem;
+    }
+  
+    .search-input {
+      flex-grow: 1;
+      padding: 5px;
+      margin-right: 10px;
+    }
+  
+    .search-button {
+      padding: 5px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      background-color: #42d461;
+    }
+  
+    .search-button:hover {
+      background-color: #11832a;
+      color: white;
+    }
+  
+    .select-row {
+      display: flex;
+      width: 60%;
+      margin-bottom: 1rem;
+    }
+  
+    .form-select {
+      flex: 1;
+      padding: 5px;
+    }
+  
+    .form-select:first-child {
+      margin-right: 10px;
+    }
+  
+    @media (max-width: 768px) {
+      .search-row {
+        width: 100%;
+      }
+  
+      .select-row {
+        width: 100%;
+        flex-direction: column;
+      }
+  
+      .form-select {
+        margin-bottom: 10px;
+      }
+  
+      .form-select:first-child {
+        margin-right: 0;
+      }
+    }
+  
+    @media (max-width: 480px) {
+      .search-row {
+        flex-direction: column;
+      }
+  
+      .search-input {
+        margin-right: 0;
+        margin-bottom: 10px;
+      }
+  
+      .search-button {
+        width: 100%;
+      }
+    }
+  </style>
+
+<div>
+      
+      <form action="{{ url_for('open_art_web_viewer.search') }}" method="get">
+        <div class="search-container">
+            <div class="search-row">
+                <input type="text" class="search-input" name="query" value="{{ query }}" placeholder="Enter search term">
+                <button type="submit" class="search-button">Search</button>
+              </div>
+          <div class="select-row">
+            <select class="form-select" name="art_type" id="art_type">
+              <option value="all" {% if art_type == 'all' %}selected{% endif %}>Any Art</option>
+              <option value="Print" {% if art_type == 'Print' %}selected{% endif %}>Print (46104)</option>
+              <option value="Index of American Design" {% if art_type == 'Index of American Design' %}selected{% endif %}>Index of American Design (18245)</option>
+              <option value="Drawing" {% if art_type == 'Drawing' %}selected{% endif %}>Drawing (13920)</option>
+              <option value="Photograph" {% if art_type == 'Photograph' %}selected{% endif %}>Photograph (13467)</option>
+              <option value="Painting" {% if art_type == 'Painting' %}selected{% endif %}>Painting (8878)</option>
+              <option value="Sculpture" {% if art_type == 'Sculpture' %}selected{% endif %}>Sculpture (6569)</option>
+              <option value="Volume" {% if art_type == 'Volume' %}selected{% endif %}>Volume (869)</option>
+              <option value="Decorative Art" {% if art_type == 'Decorative Art' %}selected{% endif %}>Decorative Art (751)</option>
+              <option value="Portfolio" {% if art_type == 'Portfolio' %}selected{% endif %}>Portfolio (247)</option>
+              <option value="Technical Material" {% if art_type == 'Technical Material' %}selected{% endif %}>Technical Material (57)</option>
+              <option value="Time Based Media Art" {% if art_type == 'Time Based Media Art' %}selected{% endif %}>Time-Based Media Art (5)</option>
+            </select>
+            <select class="form-select" name="search_type" id="search_type">
+              <option value="title" {% if search_type == 'title' %}selected{% endif %}>Title</option>
+              <option value="attribution" {% if search_type == 'attribution' %}selected{% endif %}>Attribution</option>
+              <option value="displaydate" {% if search_type == 'displaydate' %}selected{% endif %}>Display Date</option>
+            </select>
+          </div>
+        </div>
+      </form>
+
+  {% if query %}
+
+  <div class="search-results-container">
+    <h4 class="search-results-header">
+      <span class="search-query">Search Results for <b>"{{ query }}"</b></span>
+      <span class="search-stats">
+        <span class="total-results"
+          >Total Results: <b>{{ total }}</b> results</span
+        >
+        <span class="search-type">Search Type: <b>{{ search_type }}</b></span>
+        <span class="art-type">Art Type: <b>{{ art_type }}</b></span>
+      </span>
+    </h4>
+  </div>
+
+  <style>
+    .search-results-container {
+      margin: 0px;
+      margin-top: 1rem;
+      margin-bottom: 2rem;
+      padding: 0.5rem;
+      background-color: #f8f9fa;
+      border-radius: 8px;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    .search-results-header {
+      font-size: 1.2rem;
+      color: #333;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .search-query {
+      font-weight: 600;
+      color: #1a73e8;
+    }
+
+    .search-stats {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.9rem;
+      color: #666;
+    }
+
+    .total-results {
+      font-weight: 500;
+    }
+
+    .search-type,
+    .art-type {
+      background-color: #e7f0fe;
+      padding: 0.2rem 0.5rem;
+      border-radius: 4px;
+    }
+
+    .card {
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+    }
+  </style>
+
+  <div
+    id="results-container"
+    class="row g-4"
+    data-total="{{ total }}"
+    data-per-page="{{ per_page }}"
+    data-current-page="{{ page }}"
+    data-query="{{ query }}"
+    data-search-type="{{ search_type }}"
+    data-art-type="{{ art_type }}"
+    data-project-name="{{ project_name }}"
+  >
+    <!-- Results will be loaded here -->
+  </div>
+  <div id="loading" class="text-center mt-3" style="display: none">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+  </div>
+  <div class="text-center mt-3">
+    <button id="load-more" class="btn btn-secondary" style="display: none">
+      Load More
+    </button>
+  </div>
+
+  <style>
+    .modal-content {
+      background-color: #f8f9fa;
+      margin: 0 auto; /* Remove top margin */
+      padding: 20px 20px 40px; /* Increase bottom padding */
+      border: 1px solid #888;
+      width: 100%; /* Use full width */
+      max-width: none; /* Remove max-width constraint */
+      box-sizing: border-box;
+      height: 100vh; /* Use full viewport height */
+      display: flex;
+      flex-direction: column;
+    }
+
+    #modal-image {
+      width: 100%;
+      max-height: calc(
+        100vh - 150px
+      ); /* Adjust based on title and button height */
+      object-fit: contain;
+      flex-grow: 1; /* Allow image to take up remaining space */
+    }
+
+    #modal-title {
+      margin-top: 10px;
+      font-size: 1.2em;
+      font-weight: bold;
+      text-align: center;
+    }
+
+    .download-button {
+      display: block;
+      width: 150px;
+      margin: 10px auto 0;
+      padding: 5px;
+      font-size: 0.8rem;
+      background-color: #4081d6;
+      color: white;
+      text-align: center;
+      text-decoration: none;
+      border-radius: 5px;
+    }
+
+    .download-button:hover {
+      background-color: #1b5aad;
+      color: white;
+    }
+
+    /* Adjust the modal to take full screen */
+    .modal {
+      padding: 0;
+    }
+
+    .modal .close {
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      font-size: 28px;
+      font-weight: bold;
+      color: #aaa;
+      cursor: pointer;
+      z-index: 1001;
+    }
+
+    .modal .close:hover,
+    .modal .close:focus {
+      color: #000;
+      text-decoration: none;
+      cursor: pointer;
+    }
+
+    .artwork-card .card-img-top:not([src$="image_not_found.jpg"]) {
+      cursor: pointer;
+    }
+
+    .artwork-card .card-img-top[src$="image_not_found.jpg"] {
+      cursor: not-allowed;
+      opacity: 0.9; /* Optional: makes the image appear faded */
+    }
+
+    .card-title {
+      font-weight: 500;
+    }
+
+    .zoom-container {
+      position: relative;
+      overflow: visible;
+      /* z-index: 1; */
+    }
+
+    .zoom-image {
+      position: relative;
+      transition: transform 2s ease, z-index 0.3s ease;
+      object-fit: contain;
+    }
+
+    .zoom-image:hover {
+      transform: scale(2);
+      z-index: 2000;
+      position: absolute;
+    }
+
+    .card-img-top{
+        padding-top: 1rem;
+    }
+  </style>
+  <div id="artwork-modal" class="modal">
+    <div class="modal-content">
+      <span class="close">&times;</span>
+      <img id="modal-image" src="" alt="Artwork" />
+      <div id="modal-title"></div>
+      <a id="download-link" href="" download class="download-button"
+        >Download Full Image</a
+      >
+    </div>
+  </div>
+
+  <script>
+    const resultsContainer = document.getElementById("results-container");
+    const total = parseInt(resultsContainer.dataset.total);
+    const perPage = parseInt(resultsContainer.dataset.perPage);
+    let currentPage = parseInt(resultsContainer.dataset.currentPage);
+    const query = resultsContainer.dataset.query;
+    const searchType = resultsContainer.dataset.searchType;
+    const artType = resultsContainer.dataset.artType;
+    const projectName = resultsContainer.dataset.projectName;
+
+    let currentHoveredImage = null;
+
+    const fallbackImageUrl =
+      "{{ url_for('static', filename='images/image_not_found.jpg') }}";
+
+    let loading = false;
+    let hasMore = total > currentPage * perPage;
+
+    function debounce(func, wait) {
+      let timeout;
+      return function executedFunction(...args) {
+        const later = () => {
+          clearTimeout(timeout);
+          func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+      };
+    }
+
+    function handleMouseOver(event) {
+      const targetElement = event.target;
+      if (
+        targetElement.classList.contains("card-img-top") &&
+        targetElement.src !== fallbackImageUrl
+      ) {
+        if (currentHoveredImage === targetElement) return; // Don't trigger hover effect again
+        currentHoveredImage = targetElement;
+        // Trigger hover effect here...
+      }
+    }
+
+    document.addEventListener('mouseover', handleMouseOver);
+
+    function loadMoreResults() {
+      if (loading || !hasMore) return;
+      loading = true;
+      document.getElementById("loading").style.display = "block";
+
+      //fetch(`/api/search?query=${encodeURIComponent(query)}&page=${currentPage + 1}&search_type=${searchType}&art_type=${artType}`)
+      fetch(
+        `/api/search?query=${query}&page=${
+          currentPage + 1
+        }&search_type=${searchType}&art_type=${artType}`
+      )
+        .then((response) => response.json())
+        .then((data) => {
+          appendResults(data.results);
+          currentPage++;
+          hasMore = data.has_more;
+          loading = false;
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("load-more").style.display = hasMore
+            ? "block"
+            : "none";
+        })
+        .catch((error) => {
+          console.error("Error fetching more results:", error);
+          loading = false;
+          document.getElementById("loading").style.display = "none";
+
+          alert(
+            "An error occurred while loading more results. Please try again."
+          );
+        });
+    }
+
+    function appendResults(results) {
+      results.forEach((artwork, index) => {
+        setTimeout(() => {
+          const div = document.createElement("div");
+          div.className = "col-sm-6 col-md-4 col-lg-3 artwork-card";
+          div.innerHTML = `
+        <div class="card h-100">
+            <div class="zoom-container" style="height: 200px;">
+            <img class="card-img-top zoom-image" src="${artwork.imgurl_thumb}" alt="${artwork.title}" 
+            class="card-img-top zoom-image" style="height: 100%; width: 100%;"
+                loading="lazy" 
+                onerror="this.onerror=null; this.src='${fallbackImageUrl}';">
+                 </div>
+            <div class="card-body">
+                <h5 class="card-title">${artwork.title}</h5>
+                <br>
+                <p class="card-text artwork-info"><b>Source:</b> ${artwork.source}</p>
+                <p class="card-text artwork-info"><b>Attribution:</b> ${artwork.attribution}</p>
+                <p class="card-text artwork-info"><b>Created:</b> ${artwork.displaydate}</p>
+                <p class="card-text artwork-info"><b>Display date:</b> ${artwork.displaydate} (${artwork.beginyear} - ${artwork.endyear})</p>
+                <p class="card-text artwork-info"><b>Classification:</b> ${artwork.classification}</p>
+                <p class="card-text artwork-info"><b>Medium:</b> ${artwork.medium}</p>
+                <p class="card-text artwork-info"><b>Dimensions:</b> ${artwork.width} x ${artwork.height}</p>
+            </div>
+        </div>
+    `;
+          // Add click event to open modal
+          /*
+            div.querySelector('.card').addEventListener('click', () => openModal(artwork));
+            
+            const img = div.querySelector('.card-img-top');
+            
+            if (img.src !== fallbackImageUrl) {
+                div.querySelector('.card').addEventListener('click', () => openModal(artwork));
+            } else {
+                img.title = "Image not available";
+            }*/
+
+          const img = div.querySelector(".card-img-top");
+
+          // Add click event only to the image
+          if (img.src !== fallbackImageUrl) {
+            img.addEventListener("click", () => openModal(artwork));
+            img.style.cursor = "pointer"; // Optional: change cursor to indicate clickable
+          }
+
+          resultsContainer.appendChild(div);
+        }, index * 50);
+      });
+    }
+
+    function openModal(artwork) {
+      const modal = document.getElementById("artwork-modal");
+      const modalImg = document.getElementById("modal-image");
+      const modalTitle = document.getElementById("modal-title");
+      const downloadLink = document.getElementById("download-link");
+      const closeButton = modal.querySelector(".close"); // Add this line
+
+      modalImg.src = artwork.imgurl_downsized;
+      modalImg.alt = artwork.title;
+
+      modalTitle.textContent = `${artwork.title} by ${artwork.attribution}`;
+
+      // Remove the target attribute
+      downloadLink.removeAttribute("target");
+
+      // Set up the download link
+      downloadLink.href = artwork.imgurl_full;
+      downloadLink.download = `${artwork.title.replace(
+        /[^a-z0-9]/gi,
+        "_"
+      )}_full.jpg`;
+
+      const safeAttribution = artwork.attribution.replace(/[^a-z0-9]/gi, "_");
+      const safeTitle = artwork.title.replace(/[^a-z0-9]/gi, "_");
+      const fileName = `${safeAttribution} - ${safeTitle}_full.jpg`;
+
+      // Add click event listener to handle download
+      downloadLink.onclick = function (e) {
+        e.preventDefault();
+        fetch(artwork.imgurl_full)
+          .then((response) => response.blob())
+          .then((blob) => {
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement("a");
+            a.style.display = "none";
+            a.href = url;
+            a.download = fileName;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+          })
+          .catch((error) => console.error("Download failed:", error));
+      };
+
+      // Close modal when clicking on <span> (x)
+      document.querySelector(".close").onclick = function () {
+        document.getElementById("artwork-modal").style.display = "none";
+      };
+
+      // Close modal when clicking outside of it
+      window.onclick = function (event) {
+        const modal = document.getElementById("artwork-modal");
+        if (event.target == modal) {
+          modal.style.display = "none";
+        }
+      };
+
+      modal.style.display = "block";
+    }
+
+    function parseAndFixJson(jsonString) {
+      // Step 1: Try parsing the original string without cleaning
+      try {
+        return JSON.parse(jsonString);
+      } catch (error) {
+        console.log(
+          "Failed to parse original string. Attempting to fix and clean..."
+        );
+        return [];
+      }
+
+      // Step 2: If parsing fails, use an advanced fix method
+      function advancedFixJsonString(str) {
+        // Remove any leading/trailing whitespace
+        str = str.trim();
+
+        // Replace single quotes with double quotes if any
+        str = str.replace(/'/g, '"');
+
+        // Ensure the string starts and ends with appropriate brackets
+        if (!str.startsWith("[") && !str.startsWith("{")) str = "[" + str;
+        if (!str.endsWith("]") && !str.endsWith("}")) str = str + "]";
+
+        // Replace any unescaped newlines, tabs, and carriage returns
+        str = str
+          .replace(/(?<!\\)\n/g, "\\n")
+          .replace(/(?<!\\)\r/g, "\\r")
+          .replace(/(?<!\\)\t/g, "\\t");
+
+        // Fix common JSON syntax errors
+        str = str.replace(/,\s*]/g, "]"); // Remove trailing commas in arrays
+        str = str.replace(/,\s*}/g, "}"); // Remove trailing commas in objects
+
+        // Debugging: Log the fixed string
+        console.log("Fixed JSON String:", str);
+
+        return str;
+      }
+
+      // Step 3: Try parsing the fixed and cleaned string
+      try {
+        let fixedString = advancedFixJsonString(jsonString);
+        return JSON.parse(fixedString);
+      } catch (error) {
+        console.log(
+          "Failed to parse fixed string. Replacing with error text..."
+        );
+      }
+
+      // Step 4: If all else fails, return a JSON object with error information
+      return {
+        error: true,
+        message: "Failed to parse JSON",
+        originalString: jsonString.substring(0, 500) + "...", // Increase to first 500 characters for better context
+      };
+    }
+
+    // Main execution
+    var initialResultsString = '{{ results|tojson|safe }}';
+    // console.log("Initial results string:", initialResultsString);
+
+    let parsedJson = parseAndFixJson(initialResultsString);
+
+    // Initial load
+    if (parsedJson && parsedJson.length > 0) {
+      appendResults(parsedJson);
+      document.getElementById("load-more").style.display =
+        total > parsedJson.length ? "block" : "none";
+    } else if (total > 0) {
+      loadMoreResults();
+    } else {
+      resultsContainer.innerHTML =
+        "<p class='text-center'>No results found.</p>";
+    }
+
+    // Infinite scroll with debounce
+    window.addEventListener(
+      "scroll",
+      debounce(() => {
+        if (
+          window.innerHeight + window.scrollY >=
+          document.body.offsetHeight - 500
+        ) {
+          loadMoreResults();
+        }
+      }, 250)
+    );
+
+    // Load More button
+    document
+      .getElementById("load-more")
+      .addEventListener("click", loadMoreResults);
+  </script>
+  {% endif %}
+</div>
+{% endblock %}
+
+
