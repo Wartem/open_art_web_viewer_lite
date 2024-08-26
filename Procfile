@@ -1,1 +1,1 @@
-web: python $HOME/app.py
+web: cd open_art_web_viewer_lite && python app.py
