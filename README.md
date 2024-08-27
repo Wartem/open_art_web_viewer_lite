@@ -23,7 +23,6 @@ Open Art Web Viewer Lite is a Python-based web application designed to provide a
 project_root/
 ├── setup.py                # Setup script for the package
 ├── runtime.txt             # Specifies the runtime environment
-├── run_tools.py            # Utility scripts for running the application
 ├── routes.py               # Defines the application routes
 ├── requirements.txt        # Lists project dependencies
 ├── README.md               # Project documentation
