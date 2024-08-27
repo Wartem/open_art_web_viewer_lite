@@ -4,8 +4,8 @@
 ![SQLite](https://img.shields.io/badge/database-SQLite-blue.svg)
 ![HTML](https://img.shields.io/badge/language-HTML-orange.svg)
 ![CSS](https://img.shields.io/badge/language-CSS-green.svg)
+![JavaScript](https://img.shields.io/badge/language-JavaScript-yellow.svg)
 ![JSON](https://img.shields.io/badge/data-JSON-lightblue.svg)
-
 
 # open_art_web_viewer_lite
 ### A standalone version of Open Art Web Viewer
@@ -46,8 +46,8 @@ The project's directory structure can be broken down into several key components
 
 * `app.py`: This is the main entry point for the application, responsible for creating a Flask instance, loading configuration settings from `config.json`, and setting up routes.
 * `routes.py`: This module contains the various Flask routes that handle HTTP requests, including search queries, API endpoints, and more. The routes are defined using the Blueprint system in Flask.
-* `templates/`: This directory contains HTML templates used to render pages for users, such as the search page and individual artwork details.
-* `static/`: This directory holds static assets like CSS stylesheets, JavaScript files, and images used throughout the application.
+* `templates/`: This directory contains HTML templates used to render pages for users, such as the search pages.
+* `static/`: This directory holds CSS files.
 
 **API Endpoints**
 ----------------
