@@ -15,6 +15,8 @@ def create_app():
         with open(config_path, "r") as config_file:
             config = json.load(config_file)
             app.config.update(config)
+    else:
+        print(f"Warning: {config_path} does not exist. Using default configurations.")
 
     # Set default values for project_name, display_name, and SQLITE_DB_PATH
     app.config.setdefault("project_name", os.path.basename(os.path.dirname(__file__)))
@@ -32,24 +34,13 @@ def create_app():
     return app
 
 
-current_dir = os.path.dirname(os.path.abspath(__file__))
-# parent_dir = os.path.dirname(current_dir)
-
-if current_dir not in sys.path:
-    sys.path.insert(0, current_dir)
-
-# Read the project name from the config file
-config_path = os.path.join(current_dir, "config.json")
-
-with open(config_path, "r") as config_file:
-    config = json.load(config_file)
-    project_name = config.get("project_name")
-
-if not project_name:
-    raise ValueError("Project name not found in config file")
-
 app = create_app()
 
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
-    app.run(host="0.0.0.0", port=port, debug=False)
+    # Set the 'FLASK_DEBUG' environment variable for a Flask application in terminal before running
+    # For Unix-based systems (Linux, macOS):
+    # export FLASK_DEBUG=true
+    # For Windows:
+    # set FLASK_DEBUG=true
+    app.run(host="0.0.0.0", port=port, debug=os.getenv('FLASK_DEBUG', 'False').lower() == 'true')

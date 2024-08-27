@@ -1,98 +1,8 @@
 {% extends 'base.html' %} {% block content %}
 
-<style>
-  .artwork-card {
-    margin-bottom: 2rem;
-    position: relative;
-  }
-</style>
-
-<style>
-    .search-container {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      width: 90%;
-      margin: 0 auto;
-    }
-  
-    .search-row {
-      display: flex;
-      width: 80%;
-      margin-top: 1rem;
-      margin-bottom: 0.5rem;
-    }
-  
-    .search-input {
-      flex-grow: 1;
-      padding: 5px;
-      margin-right: 10px;
-    }
-  
-    .search-button {
-      padding: 5px 10px;
-      border-radius: 8px;
-      cursor: pointer;
-      background-color: #42d461;
-    }
-  
-    .search-button:hover {
-      background-color: #11832a;
-      color: white;
-    }
-  
-    .select-row {
-      display: flex;
-      width: 60%;
-      margin-bottom: 1rem;
-    }
-  
-    .form-select {
-      flex: 1;
-      padding: 5px;
-    }
-  
-    .form-select:first-child {
-      margin-right: 10px;
-    }
-  
-    @media (max-width: 768px) {
-      .search-row {
-        width: 100%;
-      }
-  
-      .select-row {
-        width: 100%;
-        flex-direction: column;
-      }
-  
-      .form-select {
-        margin-bottom: 10px;
-      }
-  
-      .form-select:first-child {
-        margin-right: 0;
-      }
-    }
-  
-    @media (max-width: 480px) {
-      .search-row {
-        flex-direction: column;
-      }
-  
-      .search-input {
-        margin-right: 0;
-        margin-bottom: 10px;
-      }
-  
-      .search-button {
-        width: 100%;
-      }
-    }
-  </style>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/search.css') }}">
 
 <div>
-      
       <form action="{{ url_for('open_art_web_viewer_lite.search') }}" method="get">
         <div class="search-container">
             <div class="search-row">
@@ -138,53 +48,6 @@
     </h4>
   </div>
 
-  <style>
-    .search-results-container {
-      margin: 0px;
-      margin-top: 1rem;
-      margin-bottom: 2rem;
-      padding: 0.5rem;
-      background-color: #f8f9faf8;
-      border-radius: 8px;
-      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-
-    .search-results-header {
-      font-size: 1.2rem;
-      color: #333;
-      display: flex;
-      flex-direction: column;
-      gap: 0.5rem;
-    }
-
-    .search-query {
-      font-weight: 600;
-      color: #1a73e8;
-    }
-
-    .search-stats {
-      display: flex;
-      gap: 1rem;
-      font-size: 0.9rem;
-      color: #666;
-    }
-
-    .total-results {
-      font-weight: 500;
-    }
-
-    .search-type,
-    .art-type {
-      background-color: #e7f0fef8;
-      padding: 0.2rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    .card {
-      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    }
-  </style>
-
   <div
     id="results-container"
     class="row g-4"
@@ -209,112 +72,6 @@
     </button>
   </div>
 
-  <style>
-    .modal-content {
-      background-color: #f8f9faf1;
-      margin: 0 auto; /* Remove top margin */
-      padding: 20px 20px 40px; /* Increase bottom padding */
-      border: 1px solid #888;
-      width: 100%; /* Use full width */
-      max-width: none; /* Remove max-width constraint */
-      box-sizing: border-box;
-      height: 100vh; /* Use full viewport height */
-      display: flex;
-      flex-direction: column;
-    }
-
-    #modal-image {
-      width: 100%;
-      max-height: calc(
-        100vh - 150px
-      ); /* Adjust based on title and button height */
-      object-fit: contain;
-      flex-grow: 1; /* Allow image to take up remaining space */
-    }
-
-    #modal-title {
-      margin-top: 10px;
-      font-size: 1.2em;
-      font-weight: bold;
-      text-align: center;
-    }
-
-    .download-button {
-      display: block;
-      width: 150px;
-      margin: 10px auto 0;
-      padding: 5px;
-      font-size: 0.8rem;
-      background-color: #4081d6;
-      color: white;
-      text-align: center;
-      text-decoration: none;
-      border-radius: 5px;
-    }
-
-    .download-button:hover {
-      background-color: #1b5aad;
-      color: white;
-    }
-
-    /* Adjust the modal to take full screen */
-    .modal {
-      padding: 0;
-    }
-
-    .modal .close {
-      position: absolute;
-      top: 10px;
-      right: 10px;
-      font-size: 28px;
-      font-weight: bold;
-      color: #aaa;
-      cursor: pointer;
-      z-index: 1001;
-    }
-
-    .modal .close:hover,
-    .modal .close:focus {
-      color: #000;
-      text-decoration: none;
-      cursor: pointer;
-    }
-
-    .artwork-card .card-img-top:not([src$="image_not_found.jpg"]) {
-      cursor: pointer;
-    }
-
-    .artwork-card .card-img-top[src$="image_not_found.jpg"] {
-      cursor: not-allowed;
-      opacity: 0.9; /* Optional: makes the image appear faded */
-    }
-
-    .card-title {
-      font-weight: 500;
-    }
-
-    .zoom-container {
-      position: relative;
-      overflow: visible;
-      /* z-index: 1; */
-    }
-
-    .zoom-image {
-      position: relative;
-      transition: transform 2s ease, z-index 0.3s ease;
-      object-fit: contain;
-    }
-
-    .zoom-image:hover {
-      transform: scale(2);
-      z-index: 2000;
-      position: absolute;
-    }
-
-    .card-img-top{
-        padding-top: 1rem;
-    }
-  </style>
   <div id="artwork-modal" class="modal">
     <div class="modal-content">
       <span class="close">&times;</span>
@@ -375,7 +132,6 @@
       loading = true;
       document.getElementById("loading").style.display = "block";
 
-      //fetch(`/api/search?query=${encodeURIComponent(query)}&page=${currentPage + 1}&search_type=${searchType}&art_type=${artType}`)
       fetch(
         `/api/search?query=${query}&page=${
           currentPage + 1
@@ -480,53 +236,6 @@
       const safeTitle = artwork.title.replace(/[^a-z0-9]/gi, "_");
       const fileName = `${safeAttribution} - ${safeTitle}_full.jpg`;
 
-      /*
-      // Select all images with the class 'card-img-top'
-      const images = document.querySelectorAll('.card-img-top');
-      // Variable to store the timeout
-      let hoverTimeout;
-
-      images.forEach(image => {
-        // Add mouseenter event listener
-        image.addEventListener('mouseenter', function() {
-          // Clear any existing timeout
-          clearTimeout(hoverTimeout);
-          
-          // Set a new timeout
-          hoverTimeout = setTimeout(() => {
-            this.classList.add('zoom-image');
-          }, 1000); // 1000 milliseconds = 1 second
-        });
-
-        // Add mouseleave event listener
-        image.addEventListener('mouseleave', function() {
-          // Clear the timeout if the mouse leaves before 1 second
-          clearTimeout(hoverTimeout);
-          
-          // Remove the zoom-image class
-          this.classList.remove('zoom-image');
-        });
-      });
-
-      // Add click event listener to handle download
-      downloadLink.onclick = function (e) {
-        e.preventDefault();
-        fetch(artwork.imgurl_full)
-          .then((response) => response.blob())
-          .then((blob) => {
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement("a");
-            a.style.display = "none";
-            a.href = url;
-            a.download = fileName;
-            document.body.appendChild(a);
-            a.click();
-            window.URL.revokeObjectURL(url);
-          })
-          .catch((error) => console.error("Download failed:", error));
-      };
-      */
-
       // Close modal when clicking on <span> (x)
       document.querySelector(".close").onclick = function () {
         document.getElementById("artwork-modal").style.display = "none";
@@ -554,8 +263,8 @@
         return [];
       }
 
-      // Step 2: If parsing fails, use an advanced fix method
-      function advancedFixJsonString(str) {
+        // Step 2: If parsing fails, use an advanced fix method
+        function advancedFixJsonString(str) {
         // Remove any leading/trailing whitespace
         str = str.trim();
 
@@ -635,37 +344,6 @@
     document
       .getElementById("load-more")
       .addEventListener("click", loadMoreResults);
-    
-    /*
-    document.addEventListener('DOMContentLoaded', () => {
-    const zoomImages = document.querySelectorAll('.zoom-image');
-    let timer;
-    const delay = 500; // 500ms delay before zooming
-
-    zoomImages.forEach(img => {
-      img.addEventListener('mouseenter', () => {
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          img.classList.add('zoomed');
-        }, delay);
-      });
-
-      img.addEventListener('mouseleave', () => {
-        clearTimeout(timer);
-        img.classList.remove('zoomed');
-      });
-
-      img.addEventListener('mousemove', () => {
-        if (img.classList.contains('zoomed')) {
-          return;
-        }
-        clearTimeout(timer);
-        timer = setTimeout(() => {
-          img.classList.add('zoomed');
-        }, delay);
-      });
-    });
-  });*/
 
   </script>
   {% endif %}
