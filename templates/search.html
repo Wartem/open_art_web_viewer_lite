@@ -480,6 +480,34 @@
       const safeTitle = artwork.title.replace(/[^a-z0-9]/gi, "_");
       const fileName = `${safeAttribution} - ${safeTitle}_full.jpg`;
 
+      /*
+      // Select all images with the class 'card-img-top'
+      const images = document.querySelectorAll('.card-img-top');
+      // Variable to store the timeout
+      let hoverTimeout;
+
+      images.forEach(image => {
+        // Add mouseenter event listener
+        image.addEventListener('mouseenter', function() {
+          // Clear any existing timeout
+          clearTimeout(hoverTimeout);
+          
+          // Set a new timeout
+          hoverTimeout = setTimeout(() => {
+            this.classList.add('zoom-image');
+          }, 1000); // 1000 milliseconds = 1 second
+        });
+
+        // Add mouseleave event listener
+        image.addEventListener('mouseleave', function() {
+          // Clear the timeout if the mouse leaves before 1 second
+          clearTimeout(hoverTimeout);
+          
+          // Remove the zoom-image class
+          this.classList.remove('zoom-image');
+        });
+      });
+
       // Add click event listener to handle download
       downloadLink.onclick = function (e) {
         e.preventDefault();
@@ -497,6 +525,7 @@
           })
           .catch((error) => console.error("Download failed:", error));
       };
+      */
 
       // Close modal when clicking on <span> (x)
       document.querySelector(".close").onclick = function () {
@@ -606,6 +635,38 @@
     document
       .getElementById("load-more")
       .addEventListener("click", loadMoreResults);
+    
+    /*
+    document.addEventListener('DOMContentLoaded', () => {
+    const zoomImages = document.querySelectorAll('.zoom-image');
+    let timer;
+    const delay = 500; // 500ms delay before zooming
+
+    zoomImages.forEach(img => {
+      img.addEventListener('mouseenter', () => {
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          img.classList.add('zoomed');
+        }, delay);
+      });
+
+      img.addEventListener('mouseleave', () => {
+        clearTimeout(timer);
+        img.classList.remove('zoomed');
+      });
+
+      img.addEventListener('mousemove', () => {
+        if (img.classList.contains('zoomed')) {
+          return;
+        }
+        clearTimeout(timer);
+        timer = setTimeout(() => {
+          img.classList.add('zoomed');
+        }, delay);
+      });
+    });
+  });*/
+
   </script>
   {% endif %}
 </div>
