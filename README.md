@@ -9,15 +9,18 @@
 
 # open_art_web_viewer_lite
 ### A standalone version of Open Art Web Viewer
+
 ----------------------
 ![OpenArtWebViewer 2024-08-27 113110](https://github.com/user-attachments/assets/78a8d204-0b1b-4fb5-ae0c-3ea05ee1230a)
 
-**Overview**
+## Overview
+
 ------------
 
 Open Art Web Viewer Lite is a Python-based web application designed to provide an interactive interface for searching and exploring artworks from various collections. The application uses the Flask web framework to handle HTTP requests and render templates, while also utilizing SQLite as its database management system.
 
-**Directory Structure**
+## Directory Structure
+
 ----------------------
 ```
 project_root/
@@ -48,7 +51,8 @@ The project's directory structure can be broken down into several key components
 * `templates/`: This directory contains HTML templates used to render pages for users, such as the search pages.
 * `static/`: This directory holds CSS and image files.
 
-**API Endpoints**
+## API Endpoints
+
 ----------------
 
 The Open Art Web Viewer Lite API is exposed through several routes defined in `routes.py`. These endpoints allow users to interact with the application programmatically, using HTTP requests. Some key API endpoints include:
@@ -56,13 +60,15 @@ The Open Art Web Viewer Lite API is exposed through several routes defined in `r
 * `/search`: This endpoint handles search queries and returns a list of matching artworks.
 * `/api/search`: This endpoint provides JSON data for the search results, including pagination information.
 
-**Search Functionality**
-------------------------
+------------------
+
+## Search Functionality
 
 The search functionality is implemented using a combination of Flask routes and SQL queries against the SQLite database. When a user submits a search query, the application uses a WHERE clause to filter the results based on the specified criteria (e.g., title, attribution, or display date).
 
-**Dynamic Image Loading**
--------------------------
+------------------
+
+## Dynamic Image Loading
 
 The Open Art Web Viewer Lite application loads artwork images dynamically as you scroll through the search results or individual artwork details. This approach helps to improve performance by only loading a few images at a time, reducing the initial page load time and improving responsiveness.
 
@@ -70,8 +76,9 @@ When you reach the bottom of the page, additional images are loaded automaticall
 
 The `loading` attribute on the image tags specifies that they should be loaded lazily, which helps to reduce the initial page load time and improve overall performance.
 
-**Data Cleaning and Database Schema**
 ------------------
+
+## Data Cleaning and Database Schema
 
 The SQLite database used by Open Art Web Viewer Lite contains a single table called `objects`. This table stores information about each artwork in the collection, including its title, attribution, display date, medium, and more.
 
@@ -109,9 +116,10 @@ This project handles inconsistencies and errors present in the original CSV file
 
 By managing the cleaning process ourselves, we can tailor it to meet the specific needs of this project, ensuring a more reliable dataset.
 
+------------------
 
-**Getting Started**
--------------------
+## Getting Started
+------------------
 
 ### Prerequisites
 
@@ -121,6 +129,8 @@ Before you start, make sure you have the following installed:
 * pip (the package installer for Python)
 * A code editor or IDE of your choice
 * Git (if you want to clone the repository)
+* 
+------------------
 
 ### Installation
 
@@ -151,18 +161,25 @@ pip install -r requirements.txt
 python app.py
 ```
 5. Open a web browser and navigate to `http://localhost:5000` to view the application.
-
-**Live Demo**
+6. 
 ------------------
+
+## Live Demo
 [Live demo](https://open-art-web-viewer-lite-fef64c62288d.herokuapp.com/)
 
-**Alternatives**
 ------------------
+
+## Alternatives
 **Open Art Viewer**
 The SQLite file created by OpenArt can be directly used with the Open Art Viewer.  
 You can download it here: [Open Art Viewer 1.0 ](https://sites.google.com/view/wartem/art-viewer) (SQLite file is already included).
 
-**License**
-----------
+------------------
 
+## Acknowledgements
+This project was developed with assistance of Perplexity AI (https://www.perplexity.ai), LM Studio using llama 3.1, Claude and other AI tools. They helped with coding practices, and documentation. Perplexity greatly facilitated the research and development process.
+
+------------------
+
+## License
 The Open Art Web Viewer Lite project is released under the MIT License. This license allows users to freely use, modify, and distribute the code as they see fit.
