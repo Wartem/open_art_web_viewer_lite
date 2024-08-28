@@ -46,7 +46,7 @@ The project's directory structure can be broken down into several key components
 * `app.py`: This is the main entry point for the application, responsible for creating a Flask instance, loading configuration settings from `config.json`, and setting up routes.
 * `routes.py`: This module contains the various Flask routes that handle HTTP requests, including search queries, API endpoints, and more. The routes are defined using the Blueprint system in Flask.
 * `templates/`: This directory contains HTML templates used to render pages for users, such as the search pages.
-* `static/`: This directory holds CSS files.
+* `static/`: This directory holds CSS and image files.
 
 **API Endpoints**
 ----------------

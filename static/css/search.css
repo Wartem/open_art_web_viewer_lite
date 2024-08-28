@@ -1,235 +1,259 @@
+/* General layout */
 .artwork-card {
     margin-bottom: 2rem;
     position: relative;
   }
-
-.search-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 90%;
-  margin: 0 auto;
-}
-
-.search-row {
-  display: flex;
-  width: 80%;
-  margin-top: 1rem;
-  margin-bottom: 0.5rem;
-}
-
-.search-input {
-  flex-grow: 1;
-  padding: 5px;
-  margin-right: 10px;
-}
-
-.search-button {
-    padding: 5px 10px;
-    border-radius: 8px;
+  
+  .search-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 90%;
+    max-width: 1200px;
+    margin: 2rem auto;
+  }
+  
+  /* Search form */
+  .search-row {
+    display: flex;
+    width: 80%;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+  }
+  
+  .search-input {
+    flex-grow: 1;
+    padding: 0.5rem;
+    margin-right: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .search-button {
+    padding: 0.5rem 1rem;
+    border-radius: 4px;
     cursor: pointer;
     background-color: #3c79eb;
     color: white;
-  }  /* Added this closing brace */
+    border: none;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+  }
   
   .search-button:hover {
     background-color: #1b5aad;
+  }
+  
+  .select-row {
+    display: flex;
+    width: 60%;
+    margin-bottom: 1rem;
+  }
+  
+  .form-select {
+    flex: 1;
+    padding: 0.5rem;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+  
+  .form-select:first-child {
+    margin-right: 10px;
+  }
+  
+  /* Search results */
+  .search-results-container {
+    margin: 1rem 0 2rem;
+    padding: 1rem;
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  .search-results-header {
+    font-size: 1.2rem;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  
+  .search-query {
+    font-weight: 600;
+    color: #1a73e8;
+  }
+  
+  .search-stats {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    font-size: 0.9rem;
+    color: #666;
+  }
+  
+  .total-results {
+    font-weight: 500;
+  }
+  
+  .search-type,
+  .art-type {
+    background-color: #e7f0fe;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+  }
+  
+  /* Artwork cards */
+  .card {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    transition: box-shadow 0.3s ease;
+  }
+  
+  .card:hover {
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+  }
+  
+  .card-title {
+    font-weight: 500;
+    font-size: 1.1rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .card-img-top.zoom-image {
+    height: 100%;
+    width: 100%;
+}
+  
+  .zoom-container {
+    position: relative;
+    overflow: visible;
+    height: 200px;
+  }
+  
+  .zoom-image {
+    position: relative;
+    transition: transform 0.7s ease-in, z-index 0.3s ease;
+    object-fit: contain;
+    height: 100%;
+    width: 100%;
+  }
+  
+  .zoom-image:hover {
+    transform: scale(1.5);
+    z-index: 10;
+  }
+  
+  .card-img-top {
+    padding-top: 1rem;
+  }
+  
+  /* Modal */
+  .modal-content {
+    background-color: #f8f9fa;
+    margin: 0 auto;
+    padding: 20px 20px 40px;
+    border: 1px solid #ddd;
+    width: 100%;
+    max-width: none;
+    box-sizing: border-box;
+    height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+  
+  #modal-image {
+    width: 100%;
+    max-height: calc(100vh - 150px);
+    object-fit: contain;
+    flex-grow: 1;
+  }
+  
+  #modal-title {
+    margin-top: 10px;
+    font-size: 1.2em;
+    font-weight: bold;
+    text-align: center;
+  }
+  
+  .download-button {
+    display: block;
+    width: 180px;
+    margin: 15px auto 0;
+    padding: 0.5rem;
+    font-size: 1rem;
+    background-color: #4081d6;
+    color: white;
+    text-align: center;
+    text-decoration: none;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .download-button:hover {
+    background-color: #1b5aad;
     color: white;
   }
-
-.select-row {
-  display: flex;
-  width: 60%;
-  margin-bottom: 1rem;
-}
-
-.form-select {
-  flex: 1;
-  padding: 5px;
-}
-
-.form-select:first-child {
-  margin-right: 10px;
-}
-
-@media (max-width: 768px) {
-  .search-row {
-    width: 100%;
+  
+  .modal {
+    padding: 0;
   }
-
-  .select-row {
-    width: 100%;
-    flex-direction: column;
+  
+  .modal .close {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    font-size: 28px;
+    font-weight: bold;
+    color: #aaa;
+    cursor: pointer;
+    z-index: 1001;
+    background: none;
+    border: none;
+    padding: 5px;
   }
-
-  .form-select {
-    margin-bottom: 10px;
+  
+  .modal .close:hover,
+  .modal .close:focus {
+    color: #000;
   }
-
-  .form-select:first-child {
-    margin-right: 0;
+  
+  /* Responsive design */
+  @media (max-width: 768px) {
+    .search-row,
+    .select-row {
+      width: 100%;
+    }
+  
+    .select-row {
+      flex-direction: column;
+    }
+  
+    .form-select {
+      margin-bottom: 10px;
+    }
+  
+    .form-select:first-child {
+      margin-right: 0;
+    }
+  
+    .search-stats {
+      flex-direction: column;
+      align-items: flex-start;
+    }
   }
-}
-
-@media (max-width: 480px) {
-  .search-row {
-    flex-direction: column;
+  
+  @media (max-width: 480px) {
+    .search-row {
+      flex-direction: column;
+    }
+  
+    .search-input {
+      margin-right: 0;
+      margin-bottom: 10px;
+    }
+  
+    .search-button {
+      width: 100%;
+    }
   }
-
-  .search-input {
-    margin-right: 0;
-    margin-bottom: 10px;
-  }
-
-  .search-button {
-    width: 100%;
-  }
-}
-
-.search-results-container {
-  margin: 0px;
-  margin-top: 1rem;
-  margin-bottom: 2rem;
-  padding: 0.5rem;
-  background-color: #f8f9faf8;
-  border-radius: 8px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.search-results-header {
-  font-size: 1.2rem;
-  color: #333;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.search-query {
-  font-weight: 600;
-  color: #1a73e8;
-}
-
-.search-stats {
-  display: flex;
-  gap: 1rem;
-  font-size: 0.9rem;
-  color: #666;
-}
-
-.total-results {
-  font-weight: 500;
-}
-
-.search-type,
-.art-type {
-  background-color: #e7f0fef8;
-  padding: 0.2rem 0.5rem;
-  border-radius: 4px;
-}
-
-.card {
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.modal-content {
-  background-color: #f8f9faf1;
-  margin: 0 auto; /* Remove top margin */
-  padding: 20px 20px 40px; /* Increase bottom padding */
-  border: 1px solid #888;
-  width: 100%; /* Use full width */
-  max-width: none; /* Remove max-width constraint */
-  box-sizing: border-box;
-  height: 100vh; /* Use full viewport height */
-  display: flex;
-  flex-direction: column;
-}
-
-#modal-image {
-  width: 100%;
-  max-height: calc(100vh - 150px); /* Adjust based on title and button height */
-  object-fit: contain;
-  flex-grow: 1; /* Allow image to take up remaining space */
-}
-
-#modal-title {
-  margin-top: 10px;
-  font-size: 1.2em;
-  font-weight: bold;
-  text-align: center;
-}
-
-.download-button {
-  display: block;
-  width: 150px;
-  margin: 10px auto 0;
-  padding: 5px;
-  font-size: 0.8rem;
-  background-color: #4081d6;
-  color: white;
-  text-align: center;
-  text-decoration: none;
-  border-radius: 5px;
-}
-
-.download-button:hover {
-  background-color: #1b5aad;
-  color: white;
-}
-
-/* Adjust the modal to take full screen */
-.modal {
-  padding: 0;
-}
-
-.modal .close {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  font-size: 28px;
-  font-weight: bold;
-  color: #aaa;
-  cursor: pointer;
-  z-index: 1001;
-}
-
-.modal .close:hover,
-.modal .close:focus {
-  color: #000;
-  text-decoration: none;
-  cursor: pointer;
-}
-
-.artwork-card .card-img-top:not([src$="image_not_found.jpg"]) {
-  cursor: pointer;
-}
-
-.artwork-card .card-img-top[src$="image_not_found.jpg"] {
-  cursor: not-allowed;
-  opacity: 0.9; /* Optional: makes the image appear faded */
-}
-
-.card-title {
-  font-weight: 500;
-}
-
-.zoom-container {
-  position: relative;
-  overflow: visible;
-  /* z-index: 1; */
-}
-
-.zoom-image {
-  position: relative;
-  transition: transform 2s ease, z-index 0.3s ease;
-  object-fit: contain;
-}
-
-.zoom-image:hover {
-  transform: scale(2);
-  z-index: 2000;
-  position: absolute;
-}
-
-.card-img-top {
-  padding-top: 1rem;
-}
